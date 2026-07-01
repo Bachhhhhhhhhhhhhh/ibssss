@@ -3,14 +3,16 @@
 import { motion } from "framer-motion";
 import {
   LayoutDashboard, Terminal, Sliders, Globe, Radar,
-  GitCompareArrows, TrendingDown, Zap,
+  GitCompareArrows, Cpu, Zap,
 } from "lucide-react";
 import { SectionHeader } from "@/components/ui/section-header";
 import { FadeIn } from "@/components/ui/fade-in";
+import { DashboardFrame } from "@/components/dashboard/dashboard-frame";
+import { MetricTile } from "@/components/dashboard/metric-tile";
 import { SymbiosisIndex } from "@/components/command/symbiosis-index";
 import { LiveTerminal } from "@/components/command/live-terminal";
 import { StrategySimulator } from "@/components/command/strategy-simulator";
-import { GlobalNetworkMap } from "@/components/command/global-network-map";
+import { GlobalSymbiosisNetwork } from "@/components/network/global-symbiosis-network";
 import { ESGRadar } from "@/components/command/esg-radar";
 import { EmissionsChart } from "@/components/command/emissions-chart";
 import { ScenarioComparator } from "@/components/command/scenario-comparator";
@@ -19,153 +21,156 @@ import { useMounted } from "@/hooks/use-mounted";
 import { cn, formatNum } from "@/lib/utils";
 
 const PANELS = [
-  { id: "overview", label: "Overview", icon: LayoutDashboard },
+  { id: "overview", label: "Mission Control", icon: LayoutDashboard },
   { id: "simulator", label: "Simulator", icon: Sliders },
-  { id: "terminal", label: "Terminal", icon: Terminal },
-  { id: "network", label: "Network", icon: Globe },
+  { id: "terminal", label: "Intel Feed", icon: Terminal },
+  { id: "network", label: "Global Net", icon: Globe },
   { id: "analytics", label: "Analytics", icon: Radar },
 ] as const;
 
 export function CommandCenterSection() {
   const mounted = useMounted();
-  const { activePanel, setActivePanel, liveMetrics } = useCommandCenter();
+  const { activePanel, setActivePanel, liveMetrics, simulation } = useCommandCenter();
+
+  const topMetrics = [
+    { label: "Symbiosis Index", value: mounted ? liveMetrics.symbiosisIndex : "—", unit: "/100", delta: "+12.4 vs baseline", trend: "up" as const, color: "#2dd4bf", seed: "symbiosis" },
+    { label: "CO₂ Avoided", value: mounted ? formatNum(liveMetrics.co2Avoided) : "—", unit: "tonnes", delta: "+18% YoY", trend: "up" as const, color: "#c9a962", seed: "co2" },
+    { label: "Green Talent", value: mounted ? liveMetrics.talentActive : "—", unit: "active", delta: "Pipeline growing", trend: "up" as const, color: "#4ade80", seed: "talent" },
+    { label: "Renewable Mix", value: mounted ? liveMetrics.renewablePct : "—", unit: "%", delta: "→ 100% by 2030", trend: "up" as const, color: "#0F766E", seed: "renewable" },
+    { label: "Water Recovered", value: mounted ? formatNum(liveMetrics.waterSaved) : "—", unit: "litres", delta: "+20% Huigui", trend: "up" as const, color: "#2dd4bf", seed: "water" },
+    { label: "Supplier SBTi", value: mounted ? liveMetrics.supplierSbti : "—", unit: "%", delta: "Target 80%", trend: "neutral" as const, color: "#c9a962", seed: "sbti" },
+  ];
 
   return (
     <section id="command" className="section-padding relative overflow-hidden">
-      {/* Matrix background effect */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(15,118,110,0.06)_0%,transparent_70%)]" />
-      <div className="absolute inset-0 opacity-[0.03]" style={{
-        backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(45,212,191,0.3) 2px, rgba(45,212,191,0.3) 3px)",
-      }} />
+      <div className="absolute inset-0 dash-grid-bg opacity-60" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(15,118,110,0.12)_0%,transparent_55%)]" />
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-teal-light/30 to-transparent" />
 
-      <div className="relative mx-auto max-w-7xl">
+      <div className="relative mx-auto max-w-[1440px]">
         <SectionHeader
           label="Strategy Supercomputer"
           title="SCM Command Center"
-          subtitle="Real-time ESG intelligence, strategy simulation, global network mapping, and scenario analysis — your mission control for symbiotic catalyst deployment."
+          subtitle="Mission control for symbiotic catalyst deployment — real-time intelligence, simulation, and global network orchestration."
         />
 
-        {/* Status strip */}
-        <FadeIn className="mb-8">
-          <div className="command-status-strip flex flex-wrap items-center gap-x-6 gap-y-2 px-5 py-3">
-            <div className="flex items-center gap-2">
-              <Zap className="h-3.5 w-3.5 text-gold" />
-              <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-gold">System Active</span>
+        {/* Hero metric strip */}
+        <FadeIn className="mb-6">
+          <DashboardFrame
+            title="Live Telemetry"
+            icon={Cpu}
+            badge="Streaming"
+            badgeColor="live"
+            noPadding
+            glow
+          >
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-px bg-white/[0.04] p-px rounded-b-[19px] overflow-hidden">
+              {topMetrics.map((m, i) => (
+                <motion.div
+                  key={m.label}
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.05 }}
+                  className="bg-[#080d0c] p-4"
+                >
+                  <MetricTile
+                    label={m.label}
+                    value={m.value}
+                    unit={m.unit}
+                    delta={mounted ? m.delta : undefined}
+                    trend={m.trend}
+                    color={m.color}
+                    sparkSeed={m.seed}
+                    size="sm"
+                  />
+                </motion.div>
+              ))}
             </div>
-            {[
-              { label: "Symbiosis Index", value: mounted ? liveMetrics.symbiosisIndex : "—", unit: "" },
-              { label: "CO₂ Avoided", value: mounted ? formatNum(liveMetrics.co2Avoided) : "—", unit: "t" },
-              { label: "Water Recovered", value: mounted ? formatNum(liveMetrics.waterSaved) : "—", unit: "L" },
-              { label: "Talent Active", value: mounted ? liveMetrics.talentActive : "—", unit: "" },
-              { label: "Renewable", value: mounted ? liveMetrics.renewablePct : "—", unit: "%" },
-              { label: "Supplier SBTi", value: mounted ? liveMetrics.supplierSbti : "—", unit: "%" },
-            ].map((m) => (
-              <div key={m.label} className="flex items-center gap-2">
-                <span className="text-[8px] text-muted-foreground uppercase">{m.label}</span>
-                <span className="text-xs font-bold text-sand tabular-nums">
-                  {m.value}{m.unit && mounted && <span className="text-[9px] text-muted-foreground ml-0.5">{m.unit}</span>}
-                </span>
-              </div>
-            ))}
-            <span className="ml-auto text-[8px] text-muted-foreground/40 hidden md:block">
-              Press <kbd className="px-1 py-0.5 rounded border border-white/10 text-[7px]">⌘K</kbd> for commands
-            </span>
-          </div>
+          </DashboardFrame>
         </FadeIn>
 
-        {/* Panel tabs */}
-        <FadeIn delay={0.05} className="mb-6">
-          <div className="flex gap-1 p-1 rounded-xl bg-white/[0.02] border border-white/[0.05] overflow-x-auto">
+        {/* Panel navigation */}
+        <FadeIn delay={0.05} className="mb-5">
+          <div className="flex gap-1.5 p-1.5 rounded-2xl bg-black/30 border border-white/[0.06] backdrop-blur-xl overflow-x-auto">
             {PANELS.map((p) => {
               const Icon = p.icon;
+              const active = activePanel === p.id;
               return (
                 <button
                   key={p.id}
                   onClick={() => setActivePanel(p.id)}
                   className={cn(
-                    "relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all",
-                    activePanel === p.id ? "text-sand" : "text-muted-foreground hover:text-sand/70"
+                    "relative flex items-center gap-2.5 px-5 py-3 rounded-xl text-xs font-bold tracking-wide whitespace-nowrap transition-all",
+                    active ? "text-sand" : "text-muted-foreground hover:text-sand/80"
                   )}
                 >
-                  {activePanel === p.id && (
+                  {active && (
                     <motion.div
-                      layoutId="panel-tab"
-                      className="absolute inset-0 bg-teal/12 border border-teal/20 rounded-lg"
-                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      layoutId="dash-tab"
+                      className="absolute inset-0 bg-gradient-to-b from-teal/15 to-teal/5 border border-teal/25 rounded-xl shadow-lg shadow-teal/5"
+                      transition={{ type: "spring", stiffness: 400, damping: 32 }}
                     />
                   )}
-                  <Icon className="relative h-3.5 w-3.5" />
+                  <Icon className={cn("relative h-4 w-4", active && "text-teal-light")} />
                   <span className="relative">{p.label}</span>
                 </button>
               );
             })}
+            <div className="ml-auto hidden lg:flex items-center gap-2 px-4 text-[9px] text-muted-foreground/50">
+              <Zap className="h-3 w-3 text-gold" />
+              NZ {simulation.netZeroYear}
+              <span className="mx-1">·</span>
+              <kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-white/[0.03]">⌘K</kbd>
+            </div>
           </div>
         </FadeIn>
 
-        {/* Panel content */}
+        {/* Main bento grid */}
         <div className="space-y-4">
           {(activePanel === "overview" || activePanel === "analytics") && (
             <div className="grid lg:grid-cols-12 gap-4">
-              <FadeIn delay={0.1} className="lg:col-span-3">
-                <div className="command-panel p-6 flex items-center justify-center min-h-[280px]">
+              <FadeIn delay={0.08} className="lg:col-span-4">
+                <DashboardFrame title="Symbiosis Index" icon={Radar} badge="Core KPI" glow className="h-full min-h-[380px]">
                   <SymbiosisIndex />
-                </div>
+                </DashboardFrame>
               </FadeIn>
-              <FadeIn delay={0.15} className="lg:col-span-5">
+              <FadeIn delay={0.12} className="lg:col-span-5">
                 <ESGRadar />
               </FadeIn>
-              <FadeIn delay={0.2} className="lg:col-span-4">
+              <FadeIn delay={0.16} className="lg:col-span-3">
                 <EmissionsChart />
               </FadeIn>
             </div>
           )}
 
-          {(activePanel === "overview" || activePanel === "simulator") && (
-            <FadeIn delay={0.1}>
-              <StrategySimulator />
-            </FadeIn>
-          )}
-
-          {(activePanel === "overview" || activePanel === "terminal") && (
-            <FadeIn delay={0.15}>
-              <LiveTerminal />
-            </FadeIn>
-          )}
+          <div className="grid lg:grid-cols-12 gap-4">
+            {(activePanel === "overview" || activePanel === "simulator") && (
+              <FadeIn delay={0.1} className="lg:col-span-7">
+                <StrategySimulator />
+              </FadeIn>
+            )}
+            {(activePanel === "overview" || activePanel === "terminal") && (
+              <FadeIn delay={0.14} className={cn(
+                activePanel === "terminal" ? "lg:col-span-12" : "lg:col-span-5"
+              )}>
+                <LiveTerminal />
+              </FadeIn>
+            )}
+          </div>
 
           {(activePanel === "overview" || activePanel === "network") && (
-            <FadeIn delay={0.2}>
-              <GlobalNetworkMap />
+            <FadeIn delay={0.18}>
+              <GlobalSymbiosisNetwork />
             </FadeIn>
           )}
 
           {(activePanel === "overview" || activePanel === "analytics") && (
-            <FadeIn delay={0.25}>
+            <FadeIn delay={0.22}>
               <ScenarioComparator />
             </FadeIn>
           )}
         </div>
-
-        {/* Quick actions */}
-        <FadeIn delay={0.3} className="mt-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              { icon: Sliders, label: "Run Simulation", panel: "simulator" },
-              { icon: Terminal, label: "Live Feed", panel: "terminal" },
-              { icon: Globe, label: "Network Map", panel: "network" },
-              { icon: GitCompareArrows, label: "Compare Scenarios", panel: "analytics" },
-            ].map((a) => (
-              <button
-                key={a.label}
-                onClick={() => setActivePanel(a.panel)}
-                className="command-quick-action flex items-center gap-3 p-4 group"
-              >
-                <a.icon className="h-4 w-4 text-teal-light group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-semibold text-sand/80 group-hover:text-sand">{a.label}</span>
-                <TrendingDown className="h-3 w-3 ml-auto text-muted-foreground/30 -rotate-90 group-hover:text-teal-light transition-colors" />
-              </button>
-            ))}
-          </div>
-        </FadeIn>
       </div>
     </section>
   );
