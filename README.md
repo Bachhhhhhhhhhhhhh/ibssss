@@ -1,4 +1,8 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Symbiotic Catalyst 2030
+
+**Live site:** [https://bachhhhhhhhhhhhhh.github.io/ibssss/](https://bachhhhhhhhhhhhhh.github.io/ibssss/)
+
+Premium pitch website for Engma Group — 2026 IBSS competition.
 
 ## Getting Started
 
